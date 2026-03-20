@@ -2,308 +2,176 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Batuhan Tatlı Hesaplayıcı</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>BatuBahis</title>
 
 <style>
-
-body{
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
-margin:0;
-background:linear-gradient(135deg,#8ef0b3,#c9ffd9);
-min-height:100vh;
-display:flex;
-flex-direction:column;
+body {
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+    margin:0;
 }
 
-header{
-background:#27ae60;
-color:white;
-text-align:center;
-padding:20px 10px;
-font-size:22px;
-font-weight:700;
-box-shadow:0 4px 15px rgba(0,0,0,0.15);
+header {
+    background:#020617;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
 }
 
-header small{
-display:block;
-font-size:13px;
-margin-top:4px;
-opacity:.9;
+.container {
+    display:flex;
 }
 
-.container{
-padding:20px;
-max-width:500px;
-margin:auto;
-width:100%;
+.left {
+    width:70%;
+    padding:20px;
 }
 
-button{
-width:100%;
-padding:14px;
-margin-top:12px;
-border:none;
-border-radius:30px;
-background:linear-gradient(135deg,#2ecc71,#1abc9c);
-color:white;
-font-size:16px;
-font-weight:600;
-cursor:pointer;
-transition:.25s;
-box-shadow:0 6px 15px rgba(0,0,0,.15);
+.right {
+    width:30%;
+    background:#020617;
+    padding:20px;
 }
 
-button:hover{
-transform:translateY(-2px) scale(1.03);
-box-shadow:0 10px 25px rgba(0,0,0,.2);
+.card {
+    background:#1e293b;
+    padding:15px;
+    margin-bottom:10px;
+    border-radius:10px;
 }
 
-button:active{
-transform:scale(.98);
+button {
+    background:#22c55e;
+    border:none;
+    padding:6px 10px;
+    margin:5px;
+    cursor:pointer;
+    color:white;
 }
 
-input{
-width:100%;
-padding:12px;
-margin-top:10px;
-border-radius:14px;
-border:1px solid #ddd;
-font-size:15px;
-outline:none;
+input {
+    padding:5px;
+    margin:5px 0;
 }
-
-input:focus{
-border-color:#2ecc71;
-box-shadow:0 0 0 2px rgba(46,204,113,0.2);
-}
-
-.card{
-background:white;
-padding:14px;
-margin-top:12px;
-border-radius:18px;
-box-shadow:0 8px 20px rgba(0,0,0,0.15);
-cursor:pointer;
-transition:.25s;
-}
-
-.card:hover{
-transform:scale(1.04);
-}
-
-.homeBtn{
-background:#555;
-}
-
-.result{
-background:white;
-padding:18px;
-margin-top:15px;
-border-radius:18px;
-text-align:center;
-font-weight:600;
-box-shadow:0 8px 20px rgba(0,0,0,0.15);
-}
-
-.page{display:none}
-
 </style>
 </head>
 
 <body>
 
 <header>
-Batuhan Tatlı Hesaplayıcı
-<small>BEM.ltd</small>
+    <h2>⚽ BatuBahis</h2>
+    <div>
+        <input id="user" placeholder="username">
+        <input id="pass" placeholder="password" type="password">
+        <button onclick="login()">Giriş</button>
+    </div>
 </header>
 
 <div class="container">
 
-<div id="home" class="page">
-<button onclick="openPage('add')">Vergi Ekle</button>
-<button onclick="openPage('list')">Vergi Hesapla</button>
-<button onclick="openPage('edit')">Vergi Düzenle / Sil</button>
+<div class="left">
+    <h3>Maçlar</h3>
+    <div id="matches"></div>
 </div>
 
-<div id="add" class="page">
-<button class="homeBtn" onclick="openPage('home')">Ana Sayfa</button>
-<h3>Yeni Vergi</h3>
-<input id="taxName" placeholder="Vergi adı">
-<input id="taxRate" type="number" placeholder="Vergi oranı %">
-<button onclick="addTax()">Kaydet</button>
-</div>
+<div class="right">
+    <h3>Kupon</h3>
+    <div id="couponList"></div>
 
-<div id="list" class="page">
-<button class="homeBtn" onclick="openPage('home')">Ana Sayfa</button>
-<div id="taxList"></div>
-<div class="result" id="result"></div>
-<button onclick="createPDF()">PDF Oluştur</button>
-</div>
+    <hr>
 
-<div id="edit" class="page">
-<button class="homeBtn" onclick="openPage('home')">Ana Sayfa</button>
-<div id="editList"></div>
+    <div>Toplam Oran: <span id="totalOdd">0</span></div>
+
+    <input id="betAmount" placeholder="Tutar" type="number">
+
+    <button onclick="placeBet()">Bahis Yap</button>
 </div>
 
 </div>
 
 <script>
+let token = "";
+let coupon = [];
 
-let taxes = JSON.parse(localStorage.getItem("taxes")) || [];
-let lastResult="";
+async function login(){
+    const res = await fetch("http://localhost:3000/login",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            username:document.getElementById("user").value,
+            password:document.getElementById("pass").value
+        })
+    });
 
-function save(){
-localStorage.setItem("taxes",JSON.stringify(taxes));
+    const data = await res.json();
+    token = data.token;
+    loadMatches();
 }
 
-function openPage(id){
+async function loadMatches(){
+    const res = await fetch("http://localhost:3000/matches");
+    const matches = await res.json();
 
-document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+    let html = "";
 
-document.getElementById(id).style.display="block";
+    matches.forEach(m=>{
+        html += `
+        <div class="card">
+            <b>${m.home} vs ${m.away}</b><br>
+            <button onclick="add('${m._id}','1',${m.odds[0]},'${m.home}')">1 (${m.odds[0]})</button>
+            <button onclick="add('${m._id}','X',${m.odds[1]},'Beraberlik')">X (${m.odds[1]})</button>
+            <button onclick="add('${m._id}','2',${m.odds[2]},'${m.away}')">2 (${m.odds[2]})</button>
+        </div>
+        `;
+    });
 
-if(id==="list") renderList();
-if(id==="edit") renderEdit();
-
+    document.getElementById("matches").innerHTML = html;
 }
 
-openPage("home");
-
-function addTax(){
-
-let name=document.getElementById("taxName").value;
-let rate=document.getElementById("taxRate").value;
-
-if(!name || !rate){
-alert("Bilgi gir");
-return;
+function add(matchId, pick, odd, team){
+    coupon.push({matchId, pick, odd, team});
+    renderCoupon();
 }
 
-taxes.push({name,rate});
+function renderCoupon(){
+    let html = "";
+    let totalOdd = 1;
 
-save();
+    coupon.forEach(c=>{
+        html += `<div>${c.team} - ${c.pick} (${c.odd})</div>`;
+        totalOdd *= c.odd;
+    });
 
-document.getElementById("taxName").value="";
-document.getElementById("taxRate").value="";
-
-alert("Kaydedildi");
-
+    document.getElementById("couponList").innerHTML = html;
+    document.getElementById("totalOdd").innerText = totalOdd.toFixed(2);
 }
 
-function renderList(){
+async function placeBet(){
+    let amount = parseFloat(document.getElementById("betAmount").value);
 
-let div=document.getElementById("taxList");
+    if(!amount){
+        alert("Tutar gir");
+        return;
+    }
 
-div.innerHTML="";
+    await fetch("http://localhost:3000/bet",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "Authorization":token
+        },
+        body:JSON.stringify({
+            amount,
+            selections:coupon
+        })
+    });
 
-taxes.forEach(t=>{
+    alert("Bahis gönderildi");
 
-let card=document.createElement("div");
-
-card.className="card";
-
-card.innerHTML=`${t.name} (%${t.rate})`;
-
-card.onclick=()=>calculate(t);
-
-div.appendChild(card);
-
-});
-
+    coupon = [];
+    renderCoupon();
 }
-
-function calculate(t){
-
-let amount=prompt("Tutar gir");
-
-if(!amount) return;
-
-let tax=amount*t.rate/100;
-
-let total=Number(amount)+tax;
-
-lastResult=
-`Vergi: ${t.name}
-Tutar: ${amount} TL
-Vergi: ${tax.toFixed(2)} TL
-Toplam: ${total.toFixed(2)} TL`;
-
-document.getElementById("result").innerHTML=
-lastResult.replace(/\n/g,"<br>");
-
-}
-
-function renderEdit(){
-
-let div=document.getElementById("editList");
-
-div.innerHTML="";
-
-taxes.forEach((t,i)=>{
-
-let card=document.createElement("div");
-
-card.className="card";
-
-card.innerHTML=
-`
-${t.name} (%${t.rate})
-<br>
-<button onclick="editTax(${i})">Düzenle</button>
-<button onclick="deleteTax(${i})">Sil</button>
-`;
-
-div.appendChild(card);
-
-});
-
-}
-
-function deleteTax(i){
-
-if(confirm("Silinsin mi?")){
-taxes.splice(i,1);
-save();
-renderEdit();
-}
-
-}
-
-function editTax(i){
-
-let name=prompt("Yeni isim",taxes[i].name);
-let rate=prompt("Yeni oran",taxes[i].rate);
-
-if(name && rate){
-
-taxes[i]={name,rate};
-
-save();
-renderEdit();
-
-}
-
-}
-
-function createPDF(){
-
-if(!lastResult){
-alert("Önce hesaplama yap");
-return;
-}
-
-const {jsPDF}=window.jspdf;
-
-let doc=new jsPDF();
-doc.text(lastResult,20,20);
-doc.save("vergi_hesaplama.pdf");
-
-}
-
 </script>
 
 </body>
