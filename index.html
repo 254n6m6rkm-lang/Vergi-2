@@ -2,176 +2,91 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>BatuBahis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BatuBahis Live</title>
 
 <style>
-body {
-    background:#0f172a;
-    color:white;
-    font-family:Arial;
-    margin:0;
-}
-
-header {
-    background:#020617;
-    padding:15px;
-    display:flex;
-    justify-content:space-between;
-}
-
-.container {
-    display:flex;
-}
-
-.left {
-    width:70%;
-    padding:20px;
-}
-
-.right {
-    width:30%;
-    background:#020617;
-    padding:20px;
-}
-
-.card {
-    background:#1e293b;
-    padding:15px;
-    margin-bottom:10px;
-    border-radius:10px;
-}
-
-button {
-    background:#22c55e;
-    border:none;
-    padding:6px 10px;
-    margin:5px;
-    cursor:pointer;
-    color:white;
-}
-
-input {
-    padding:5px;
-    margin:5px 0;
-}
+body{margin:0;font-family:Arial;background:#111;color:white;}
+.top{background:#0a8f3c;padding:10px;font-weight:bold;}
+.tabs{display:flex;background:#1f2937;}
+.tabs div{padding:10px;flex:1;text-align:center;}
+.active{border-bottom:3px solid yellow;}
+.match{background:#e5e7eb;color:black;margin:8px;border-radius:8px;padding:10px;}
+.league{background:#374151;color:white;padding:5px;font-size:14px;}
+.row{display:flex;justify-content:space-between;align-items:center;}
+.odds{display:flex;gap:5px;margin-top:5px;}
+.odd{background:#d1d5db;padding:5px 8px;border-radius:5px;font-size:12px;}
+.live{color:red;font-size:12px;}
 </style>
 </head>
 
 <body>
 
-<header>
-    <h2>⚽ BatuBahis</h2>
-    <div>
-        <input id="user" placeholder="username">
-        <input id="pass" placeholder="password" type="password">
-        <button onclick="login()">Giriş</button>
-    </div>
-</header>
+<div class="top">🟢 Canlı Bahis</div>
 
-<div class="container">
-
-<div class="left">
-    <h3>Maçlar</h3>
-    <div id="matches"></div>
+<div class="tabs">
+<div class="active">Futbol</div>
+<div>Basketbol</div>
+<div>E-Futbol</div>
 </div>
 
-<div class="right">
-    <h3>Kupon</h3>
-    <div id="couponList"></div>
-
-    <hr>
-
-    <div>Toplam Oran: <span id="totalOdd">0</span></div>
-
-    <input id="betAmount" placeholder="Tutar" type="number">
-
-    <button onclick="placeBet()">Bahis Yap</button>
-</div>
-
-</div>
+<div id="app"></div>
 
 <script>
-let token = "";
-let coupon = [];
 
-async function login(){
-    const res = await fetch("http://localhost:3000/login",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-            username:document.getElementById("user").value,
-            password:document.getElementById("pass").value
-        })
-    });
+const data = [
+{
+league:"İNGİLTERE PREMIER LİG",
+matches:[
+{home:"Bournemouth",away:"Man United",score:"0-0",time:"27'",odds:[2.79,2.87,1.91]},
+]
+},
+{
+league:"İSPANYA LA LIGA",
+matches:[
+{home:"Villarreal",away:"Sociedad",score:"3-0",time:"25'",odds:[1.5,17.2,17.2]},
+]
+},
+{
+league:"İTALYA SERIE A",
+matches:[
+{home:"Genoa",away:"Udinese",score:"0-0",time:"40'",odds:[1.92,2.03,4.66]},
+]
+}
+];
 
-    const data = await res.json();
-    token = data.token;
-    loadMatches();
+function render(){
+let html="";
+data.forEach(l=>{
+html+=`<div class="league">${l.league}</div>`;
+l.matches.forEach(m=>{
+html+=`
+<div class="match">
+<div class="row">
+<div>
+<div>${m.home}</div>
+<div>${m.away}</div>
+</div>
+<div>
+<b>${m.score}</b><br>
+<span class="live">${m.time}</span>
+</div>
+</div>
+
+<div class="odds">
+<div class="odd">1 ${m.odds[0]}</div>
+<div class="odd">X ${m.odds[1]}</div>
+<div class="odd">2 ${m.odds[2]}</div>
+</div>
+</div>
+`;
+});
+});
+document.getElementById("app").innerHTML=html;
 }
 
-async function loadMatches(){
-    const res = await fetch("http://localhost:3000/matches");
-    const matches = await res.json();
+render();
 
-    let html = "";
-
-    matches.forEach(m=>{
-        html += `
-        <div class="card">
-            <b>${m.home} vs ${m.away}</b><br>
-            <button onclick="add('${m._id}','1',${m.odds[0]},'${m.home}')">1 (${m.odds[0]})</button>
-            <button onclick="add('${m._id}','X',${m.odds[1]},'Beraberlik')">X (${m.odds[1]})</button>
-            <button onclick="add('${m._id}','2',${m.odds[2]},'${m.away}')">2 (${m.odds[2]})</button>
-        </div>
-        `;
-    });
-
-    document.getElementById("matches").innerHTML = html;
-}
-
-function add(matchId, pick, odd, team){
-    coupon.push({matchId, pick, odd, team});
-    renderCoupon();
-}
-
-function renderCoupon(){
-    let html = "";
-    let totalOdd = 1;
-
-    coupon.forEach(c=>{
-        html += `<div>${c.team} - ${c.pick} (${c.odd})</div>`;
-        totalOdd *= c.odd;
-    });
-
-    document.getElementById("couponList").innerHTML = html;
-    document.getElementById("totalOdd").innerText = totalOdd.toFixed(2);
-}
-
-async function placeBet(){
-    let amount = parseFloat(document.getElementById("betAmount").value);
-
-    if(!amount){
-        alert("Tutar gir");
-        return;
-    }
-
-    await fetch("http://localhost:3000/bet",{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":token
-        },
-        body:JSON.stringify({
-            amount,
-            selections:coupon
-        })
-    });
-
-    alert("Bahis gönderildi");
-
-    coupon = [];
-    renderCoupon();
-}
 </script>
 
 </body>
