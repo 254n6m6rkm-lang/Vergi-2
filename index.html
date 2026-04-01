@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mart 2026 Bali Turu</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<style>
+body {
+    margin:0;
+    font-family:Arial;
+    background:#000;
+    color:#fff;
+    overflow:hidden;
+}
+
+/* Parallax background */
+.bg {
+    position:fixed;
+    width:100%;
+    height:100%;
+    background: radial-gradient(circle at center,#0f0f0f,#000);
+    z-index:0;
+}
+
+/* SVG pattern */
+.pattern {
+    position:fixed;
+    width:100%;
+    height:100%;
+    opacity:0.08;
+    background-image:url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M100 0 L200 100 L100 200 L0 100 Z' stroke='white' fill='none'/%3E%3C/svg%3E");
+    z-index:1;
+}
+
+/* Floating animation */
+@keyframes float {
+    0% { transform: translateY(0px);}
+    50% { transform: translateY(-10px);}
+    100% { transform: translateY(0px);}
+}
+
+.container {
+    position:relative;
+    z-index:2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.box {
+    background:rgba(30,30,30,0.85);
+    backdrop-filter: blur(12px);
+    padding:30px;
+    border-radius:20px;
+    width:340px;
+    text-align:center;
+    box-shadow:0 0 40px rgba(0,255,150,0.15);
+}
+
+.temple {
+    font-size:50px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Glow button */
+button {
+    background:#00c853;
+    color:white;
+    cursor:pointer;
+    box-shadow:0 0 10px #00ff88;
+}
+
+button:hover {
+    box-shadow:0 0 20px #00ff88;
+}
+
+/* Inputs */
+select,input,button {
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border-radius:10px;
+    border:none;
+    font-size:16px;
+    text-align:center;
+}
+
+.result {
+    margin-top:15px;
+    font-size:22px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+<div class="pattern"></div>
+
+<div class="container">
+<div class="box">
+
+<div class="temple">🛕</div>
+
+<h2>Mart 2026 Bali Turu</h2>
+
+<select id="currency">
+<option value="380">TL</option>
+<option value="15500">USD</option>
+<option value="16500">EUR</option>
+</select>
+
+<input type="text" id="rupi" placeholder="Rupi gir">
+<button onclick="hesapla()">Hesapla</button>
+
+<div class="result" id="sonuc">-</div>
+
+</div>
+</div>
+
+<script>
+const input=document.getElementById("rupi");
+
+input.addEventListener("input",function(e){
+let val=e.target.value.replace(/\D/g,'');
+e.target.value=Number(val).toLocaleString("tr-TR");
+});
+
+function hesapla(){
+let raw=document.getElementById("rupi").value.replace(/\./g,'');
+let rupi=Number(raw);
+let kur=Number(document.getElementById("currency").value);
+let sonuc=rupi/kur;
+let symbol=document.getElementById("currency").selectedOptions[0].text;
+
+document.getElementById("sonuc").innerText=
+sonuc.toLocaleString('tr-TR',{maximumFractionDigits:2})+" "+symbol;
+}
+</script>
+
+</body>
+</html>
