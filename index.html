@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mart 2026 Bali Turu</title>
+
+<style>
+body{
+margin:0;
+background:#000;
+color:#fff;
+font-family:Arial;
+overflow:hidden;
+}
+
+/* Splash */
+#splash{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-wrap:wrap;
+z-index:9999;
+background:#000;
+padding:20px;
+text-align:center;
+}
+
+.letter{
+font-size:20px;
+opacity:0;
+display:inline-block;
+margin:2px;
+}
+
+@keyframes drop{
+0%{transform:translateY(-300px);opacity:0;}
+70%{transform:translateY(10px);opacity:1;}
+100%{transform:translateY(0);}
+}
+
+@keyframes glow{
+0%,100%{text-shadow:0 0 5px currentColor;}
+50%{text-shadow:0 0 20px currentColor;}
+}
+
+/* Main app */
+#app{
+display:none;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.box{
+background:#1e1e1e;
+padding:30px;
+border-radius:20px;
+width:320px;
+text-align:center;
+}
+
+select,input,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:none;
+font-size:16px;
+text-align:center;
+}
+
+button{
+background:#00c853;
+color:#fff;
+}
+
+.result{
+margin-top:15px;
+font-size:22px;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="splash"></div>
+
+<div id="app">
+<div class="box">
+<h2>Mart 2026 Bali Turu</h2>
+
+<select id="currency">
+<option value="380">TL</option>
+<option value="15500">USD</option>
+<option value="16500">EUR</option>
+</select>
+
+<input type="text" id="rupi" placeholder="Rupi gir">
+<button onclick="hesapla()">Hesapla</button>
+
+<div class="result" id="sonuc">-</div>
+</div>
+</div>
+
+<script>
+const text="Baliye ve Endonezya ya Hoşgeldiniz";
+const splash=document.getElementById("splash");
+const colors=["#00ff88","#00c853","#00e5ff","#ffea00","#ff4081"];
+
+text.split("").forEach((char,i)=>{
+let span=document.createElement("span");
+span.innerText=char;
+span.className="letter";
+span.style.animation="drop 1.2s forwards";
+span.style.animationDelay=(i*0.06)+"s";
+
+setTimeout(()=>{
+span.style.opacity=1;
+span.style.color=colors[i%colors.length];
+span.style.animation+=" , glow 2s infinite";
+},i*60+1000);
+
+splash.appendChild(span);
+});
+
+setTimeout(()=>{
+splash.style.display="none";
+document.getElementById("app").style.display="flex";
+document.body.style.overflow="auto";
+},6000);
+
+// input
+document.addEventListener("DOMContentLoaded",()=>{
+const input=document.getElementById("rupi");
+input.addEventListener("input",function(e){
+let val=e.target.value.replace(/\D/g,'');
+e.target.value=Number(val).toLocaleString("tr-TR");
+});
+});
+
+// calculation
+function hesapla(){
+let raw=document.getElementById("rupi").value.replace(/\./g,'');
+let rupi=Number(raw);
+let kur=Number(document.getElementById("currency").value);
+let sonuc=rupi/kur;
+let symbol=document.getElementById("currency").selectedOptions[0].text;
+
+document.getElementById("sonuc").innerText=
+sonuc.toLocaleString('tr-TR',{maximumFractionDigits:2})+" "+symbol;
+}
+</script>
+
+</body>
+</html>
