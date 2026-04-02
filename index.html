@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bali Cüzdanım</title>
+
+<style>
+body{
+margin:0;
+background:#000;
+color:#fff;
+font-family:Arial;
+overflow:hidden;
+}
+
+/* SPLASH */
+#splash{
+position:fixed;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+z-index:9999;
+perspective:800px;
+}
+
+.logo{
+font-size:42px;
+font-weight:bold;
+color:#00ff88;
+transform:rotateX(90deg);
+animation:logoIn 2s ease forwards;
+text-shadow:0 0 20px #00ff88;
+}
+
+@keyframes logoIn{
+0%{transform:rotateX(90deg) scale(0.5);opacity:0;}
+60%{transform:rotateX(-10deg) scale(1.1);}
+100%{transform:rotateX(0) scale(1);opacity:1;}
+}
+
+/* APP */
+#app{
+display:none;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.box{
+background:#1e1e1e;
+padding:30px;
+border-radius:20px;
+width:320px;
+text-align:center;
+}
+
+select,input,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:none;
+font-size:16px;
+text-align:center;
+}
+
+button{
+background:#00c853;
+color:#fff;
+cursor:pointer;
+}
+
+.result{
+margin-top:15px;
+font-size:22px;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div id="splash">
+<div class="logo">Bali Cüzdanım</div>
+</div>
+
+<div id="app">
+<div class="box">
+<h2>Bali Cüzdanım</h2>
+
+<select id="from">
+<option value="IDR">Rupi</option>
+<option value="TRY">TL</option>
+<option value="USD">USD</option>
+<option value="EUR">EUR</option>
+</select>
+
+<select id="to">
+<option value="TRY">TL</option>
+<option value="IDR">Rupi</option>
+<option value="USD">USD</option>
+<option value="EUR">EUR</option>
+</select>
+
+<input type="text" id="amount" placeholder="Miktar gir">
+
+<button onclick="cevir()">Çevir</button>
+
+<div class="result" id="sonuc">-</div>
+</div>
+</div>
+
+<script>
+// splash → app
+setTimeout(()=>{
+document.getElementById("splash").style.display="none";
+document.getElementById("app").style.display="flex";
+document.body.style.overflow="auto";
+},2500);
+
+// format input
+document.getElementById("amount").addEventListener("input",function(e){
+let val=e.target.value.replace(/\D/g,'');
+e.target.value=Number(val).toLocaleString("tr-TR");
+});
+
+// static rates (offline)
+const rates = {
+IDR:1,
+TRY:380,
+USD:15500,
+EUR:16500
+};
+
+function cevir(){
+let raw=document.getElementById("amount").value.replace(/\./g,'');
+let amount=Number(raw);
+
+let from=document.getElementById("from").value;
+let to=document.getElementById("to").value;
+
+let inIDR = amount * rates[from];
+let result = inIDR / rates[to];
+
+document.getElementById("sonuc").innerText =
+result.toLocaleString('tr-TR',{maximumFractionDigits:2})+" "+to;
+}
+</script>
+
+</body>
+</html>
